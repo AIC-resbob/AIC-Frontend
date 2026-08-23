@@ -1,5 +1,6 @@
-// Ganti URL ini kalau Jovian ngotot pakai vemight alih-alih vernight
-export const API_BASE_URL = 'https://aic.elysiavernight.com'; 
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7700';
+
 
 export const apiCall = async (endpoint: string, data: any, method: string = 'POST') => {
   try {
