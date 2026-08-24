@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { MOCK_PRODUCTS } from '../utils/constants';
 
 interface DiscountFormProps {
   loading: boolean;
@@ -9,14 +8,41 @@ interface DiscountFormProps {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7700';
 
 export default function DiscountForm({ loading, onSubmit }: DiscountFormProps) {
-  const [productId, setProductId] = useState<number>(MOCK_PRODUCTS[0]?.id || 1);
+  const [products, setProducts] = useState<any[]>([]);
+  const [productId, setProductId] = useState<number>(0);
   const [currentStock, setCurrentStock] = useState<string>('');
   const [targetDays, setTargetDays] = useState<string>('7');
   const [cogs, setCogs] = useState<string>('');
   const [sellingPrice, setSellingPrice] = useState<string>('');
   const [fetchingProduct, setFetchingProduct] = useState<boolean>(false);
+  const [fetchingProducts, setFetchingProducts] = useState<boolean>(true);
 
   useEffect(() => {
+    const fetchProductsList = async () => {
+      setFetchingProducts(true);
+      const token = localStorage.getItem('stockflow_token') || '';
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/products`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data);
+          if (data.length > 0) {
+            setProductId(data[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setFetchingProducts(false);
+      }
+    };
+    fetchProductsList();
+  }, []);
+
+  useEffect(() => {
+    if (!productId) return;
     const fetchProductData = async () => {
       setFetchingProduct(true);
       const token = localStorage.getItem('stockflow_token') || '';
@@ -37,8 +63,8 @@ export default function DiscountForm({ loading, onSubmit }: DiscountFormProps) {
         const stockValue = data.inventory?.current_stock ?? data.current_stock ?? data.stock ?? 0;
         
         setCurrentStock(String(stockValue));
-        setCogs(String(data.cogs ?? ''));
-        setSellingPrice(String(data.selling_price ?? ''));
+        setCogs(String(data.inventory?.cogs ?? data.cogs ?? ''));
+        setSellingPrice(String(data.inventory?.selling_price ?? data.selling_price ?? ''));
       } catch (err) {
         console.error("Failed to fetch product data:", err);
       } finally {
@@ -67,9 +93,16 @@ export default function DiscountForm({ loading, onSubmit }: DiscountFormProps) {
         <select 
           value={productId} 
           onChange={(e) => setProductId(Number(e.target.value))} 
+          disabled={fetchingProducts || products.length === 0}
           className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 outline-none transition text-slate-700 font-medium"
         >
-          {MOCK_PRODUCTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {fetchingProducts ? (
+            <option>Loading products...</option>
+          ) : products.length === 0 ? (
+            <option>Belum ada produk</option>
+          ) : (
+            products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
+          )}
         </select>
       </div>
 
@@ -105,7 +138,7 @@ export default function DiscountForm({ loading, onSubmit }: DiscountFormProps) {
             required 
             placeholder={fetchingProduct ? "Loading..." : "0"} 
             value={cogs} 
-            onChange={(e) => setCogs(e.target.value)} 
+            onChange={(e) => setCogs(e.target.value)}
             className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 outline-none transition text-slate-700 font-medium" 
           />
         </div>
@@ -117,7 +150,7 @@ export default function DiscountForm({ loading, onSubmit }: DiscountFormProps) {
             required 
             placeholder={fetchingProduct ? "Loading..." : "0"} 
             value={sellingPrice} 
-            onChange={(e) => setSellingPrice(e.target.value)} 
+            onChange={(e) => setSellingPrice(e.target.value)}
             className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 outline-none transition text-slate-700 font-medium" 
           />
         </div>
@@ -125,7 +158,7 @@ export default function DiscountForm({ loading, onSubmit }: DiscountFormProps) {
 
       <button 
         type="submit" 
-        disabled={loading || fetchingProduct} 
+        disabled={loading || fetchingProduct || fetchingProducts || !productId} 
         className="w-full bg-slate-900 hover:bg-black text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-slate-300 flex justify-center items-center mt-2 disabled:opacity-70 disabled:hover:translate-y-0"
       >
         {loading ? <span className="animate-spin text-2xl">⚙️</span> : "Cari Harga Terbaik"}
