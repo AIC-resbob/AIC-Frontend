@@ -3,11 +3,12 @@ import RestockForm from "./components/RestockForm";
 import DiscountForm from "./components/DiscountForm";
 import ResultBox from "./components/ResultBox";
 import AuthForm from "./components/AuthForm";
+import ProductsManagement from "./components/ProductsManagement";
 import type { AIResult } from "./utils/constants";
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<"restock" | "discount">("restock");
+  const [activeTab, setActiveTab] = useState<"restock" | "discount" | "products">("products");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AIResult | null>(null);
 
@@ -159,6 +160,15 @@ export default function App() {
               <div className="flex p-1.5 bg-slate-100/80 rounded-2xl">
                 <button
                   onClick={() => {
+                    setActiveTab("products");
+                    setResult(null);
+                  }}
+                  className={`flex-1 py-2.5 px-4 text-[14px] font-semibold rounded-xl transition-all duration-300 ${activeTab === "products" ? "bg-white text-slate-800 shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                  Products
+                </button>
+                <button
+                  onClick={() => {
                     setActiveTab("restock");
                     setResult(null);
                   }}
@@ -179,7 +189,9 @@ export default function App() {
             </div>
 
             <div className="px-8 pb-10">
-              {activeTab === "restock" ? (
+              {activeTab === "products" ? (
+                <ProductsManagement />
+              ) : activeTab === "restock" ? (
                 <RestockForm loading={loading} onSubmit={handleRestockSubmit} />
               ) : (
                 <DiscountForm
@@ -187,7 +199,7 @@ export default function App() {
                   onSubmit={handleDiscountSubmit}
                 />
               )}
-              {result && !loading && <ResultBox result={result} />}
+              {result && !loading && activeTab !== "products" && <ResultBox result={result} />}
             </div>
           </>
         )}
