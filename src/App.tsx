@@ -64,11 +64,12 @@ export default function App() {
     }
   };
 
-  const handleDiscountSubmit = async (data: { 
-    productId: number; 
-    targetDays: number; 
-    cogs: number; 
-    sellingPrice: number 
+  const handleDiscountSubmit = async (data: {
+    productId: number;
+    currentStock: number;
+    targetDays: number;
+    cogs: number;
+    sellingPrice: number
   }) => {
     setLoading(true);
     setResult(null);
@@ -89,6 +90,7 @@ export default function App() {
           target_days: data.targetDays,
           cogs: data.cogs,
           selling_price: data.sellingPrice,
+          current_stock: data.currentStock,
         }),
       });
 
