@@ -23,3 +23,44 @@ Frontend website for Stockflow AI.
 1. React.js
 2. Vite
 3. Tailwind css
+
+## project structure
+```
+.
+├── .env.development -> for npm run dev
+├── .env.example ->for reference
+├── .env.production ->for npm run build
+├── eslint.config.js
+├── .gitignore
+├── index.html
+├── package.json
+├── package-lock.json
+├── postcss.config.js
+├── public
+│   ├── favicon.svg
+│   └── icons.svg
+├── README.md
+├── src
+│   ├── App.tsx
+│   ├── assets
+│   │   ├── hero.png
+│   │   ├── react.svg
+│   │   └── vite.svg
+│   ├── components
+│   │   ├── AuthForm.tsx
+│   │   ├── DiscountForm.tsx
+│   │   ├── RestockForm.tsx
+│   │   └── ResultBox.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   └── utils
+│       ├── api.ts
+│       └── constants.ts
+├── tailwind.config.js
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts
+
+6 directories, 29 files
+```
