@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { MOCK_PRODUCTS } from '../utils/constants';
 
 interface RestockFormProps {
   loading: boolean;
@@ -9,12 +8,39 @@ interface RestockFormProps {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7700';
 
 export default function RestockForm({ loading, onSubmit }: RestockFormProps) {
-  const [productId, setProductId] = useState<number>(MOCK_PRODUCTS[0]?.id || 1);
+  const [products, setProducts] = useState<any[]>([]);
+  const [productId, setProductId] = useState<number>(0);
   const [currentStock, setCurrentStock] = useState<number | null>(null);
   const [targetDays, setTargetDays] = useState<string>('');
   const [fetchingStock, setFetchingStock] = useState<boolean>(false);
+  const [fetchingProducts, setFetchingProducts] = useState<boolean>(true);
 
   useEffect(() => {
+    const fetchProductsList = async () => {
+      setFetchingProducts(true);
+      const token = localStorage.getItem('stockflow_token') || '';
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/products`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data);
+          if (data.length > 0) {
+            setProductId(data[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setFetchingProducts(false);
+      }
+    };
+    fetchProductsList();
+  }, []);
+
+  useEffect(() => {
+    if (!productId) return;
     const fetchStock = async () => {
       setFetchingStock(true);
       const token = localStorage.getItem('stockflow_token') || '';
@@ -60,9 +86,16 @@ export default function RestockForm({ loading, onSubmit }: RestockFormProps) {
         <select 
           value={productId} 
           onChange={(e) => setProductId(Number(e.target.value))} 
+          disabled={fetchingProducts || products.length === 0}
           className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition text-slate-700 font-medium"
         >
-          {MOCK_PRODUCTS.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {fetchingProducts ? (
+            <option>Loading products...</option>
+          ) : products.length === 0 ? (
+            <option>Belum ada produk</option>
+          ) : (
+            products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)
+          )}
         </select>
       </div>
 
@@ -89,7 +122,7 @@ export default function RestockForm({ loading, onSubmit }: RestockFormProps) {
 
       <button 
         type="submit" 
-        disabled={loading || fetchingStock} 
+        disabled={loading || fetchingStock || fetchingProducts || !productId} 
         className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-indigo-200 flex justify-center items-center mt-2 disabled:opacity-70 disabled:hover:translate-y-0"
       >
         {loading ? <span className="animate-spin text-2xl">⚙️</span> : "Mulai Analisis AI"}
